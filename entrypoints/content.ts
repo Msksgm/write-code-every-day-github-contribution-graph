@@ -1,6 +1,8 @@
 export default defineContentScript({
-  matches: ['*://*.google.com/*'],
+  matches: ['https://github.com/Msksgm'],
   main() {
-    console.log('Hello content.');
+    const element = document.createElement('div');
+    element.textContent = 'Write Code Every Day';
+    document.body.prepend(element);
   },
 });
