@@ -14,9 +14,26 @@ const fetchRepository = async (): Promise<void> => {
 
   const repository = await response.json();
 
-  console.log({
-    full_name: repository.full_name,
-    private: repository.private,
-    default_branch: repository.default_branch,
-  });
+  const headSha = await fetchHeadSha(
+    repository.full_name,
+    repository.default_branch,
+  );
+
+  console.log({ headSha });
+};
+
+const fetchHeadSha = async (
+  fullName: string,
+  branch: string,
+): Promise<string> => {
+  const response = await fetch(`https://api.github.com/repos/${fullName}/commits/${encodeURIComponent(branch)}`)
+
+  if (!response.ok) {
+    throw new Error(`取得に失敗しました : HTTP ${response.status}`)
+  }
+
+  const commit = await response.json();
+
+
+  return commit.sha
 };
