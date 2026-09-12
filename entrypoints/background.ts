@@ -78,5 +78,21 @@ const fetchCommitFiles = async (
 
   const commit = await response.json();
 
-  console.log(commit.files)
+  const allowedExtensions = [`.kt`, `.kts`, `.java`, `.js`, `.jsx`, `.ts`, `.tsx`, `.py`, `.go`, `.rs`, `.rb`, `.php`, `.c`, `.h`, `.cpp`, `.hpp`, `.cs`, `.swift`, `.dart`, `.scala`, `.sh`, `.sql`]
+  const includeCode = hasCodeChanges(commit.files, allowedExtensions)
+  console.log({ includeCode })
 };
+
+const hasCodeChanges = (
+  files: { filename: string }[],
+  allowedExtensions: string[],
+): boolean => {
+  for (const file of files) {
+    for (const extension of allowedExtensions) {
+      if (file.filename.endsWith(extension)) {
+        return true
+      }
+    }
+  }
+  return false
+}
