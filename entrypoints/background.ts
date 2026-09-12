@@ -19,7 +19,8 @@ const fetchRepository = async (): Promise<void> => {
     repository.default_branch,
   );
 
-  console.log({ headSha });
+
+  await fetchCommits(repository.full_name, headSha, 'Msksgm');
 };
 
 const fetchHeadSha = async (
@@ -36,4 +37,25 @@ const fetchHeadSha = async (
 
 
   return commit.sha
+};
+
+const fetchCommits = async (
+  fullName: string,
+  headSha: string,
+  author: string,
+): Promise<void> => {
+  const params = new URLSearchParams({
+    sha: headSha,
+    author,
+    per_page: '10',
+    page: '1',
+  })
+  const response = await fetch(`https://api.github.com/repos/${fullName}/commits?${params}`)
+
+  if (!response.ok) {
+    throw new Error(`取得に失敗しました : HTTP ${response.status}`)
+  }
+
+  const commits = await response.json();
+  console.log({ commits })
 };
