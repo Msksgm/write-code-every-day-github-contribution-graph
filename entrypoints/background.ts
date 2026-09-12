@@ -58,4 +58,25 @@ const fetchCommits = async (
 
   const commits = await response.json();
   console.log({ commits })
+
+  if (commits.length == 0) {
+    return
+  }
+
+  await fetchCommitFiles(fullName, commits[0].sha)
+};
+
+const fetchCommitFiles = async (
+  fullName: string,
+  sha: string,
+): Promise<void> => {
+  const response = await fetch(`https://api.github.com/repos/${fullName}/commits/${sha}`)
+
+  if (!response.ok) {
+    throw new Error(`取得に失敗しました : HTTP ${response.status}`)
+  }
+
+  const commit = await response.json();
+
+  console.log(commit.files)
 };
