@@ -1,0 +1,12 @@
+
+// Merge commit 判定
+export const isMergeCommit = (
+  parents: { sha: string }[],
+): boolean => {
+  // 通常 commit は 1 つ、root commit は 0、Merge commit は 2 つ以上になる
+  if (parents.length >= 2) {
+    return true
+  }
+  return false
+};
+

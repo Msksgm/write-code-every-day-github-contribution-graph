@@ -1,3 +1,5 @@
+import { isMergeCommit } from "@/utils/commit-rules";
+
 export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id });
   fetchRepository().catch((error) => {
@@ -102,14 +104,3 @@ const hasCodeChanges = (
   }
   return false
 }
-
-// Merge commit 判定
-const isMergeCommit = (
-  parents: { sha: string }[],
-): boolean => {
-  // 通常 commit は 1 つ、root commit は 0、Merge commit は 2 つ以上になる
-  if (parents.length >= 2) {
-    return true
-  }
-  return false
-};
