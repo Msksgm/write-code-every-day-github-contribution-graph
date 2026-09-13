@@ -57,6 +57,7 @@ const fetchCommits = async (
   }
 
   const commits = await response.json();
+
   console.log({ commits })
 
   if (commits.length == 0) {
@@ -78,6 +79,11 @@ const fetchCommitFiles = async (
 
   const commit = await response.json();
 
+  if (isMergeCommit(commit.parents)) {
+    console.log('merge commit を除外:', commit.sha);
+    return
+  }
+
   const allowedExtensions = [`.kt`, `.kts`, `.java`, `.js`, `.jsx`, `.ts`, `.tsx`, `.py`, `.go`, `.rs`, `.rb`, `.php`, `.c`, `.h`, `.cpp`, `.hpp`, `.cs`, `.swift`, `.dart`, `.scala`, `.sh`, `.sql`]
   const includeCode = hasCodeChanges(commit.files, allowedExtensions)
   console.log({ includeCode })
@@ -96,3 +102,14 @@ const hasCodeChanges = (
   }
   return false
 }
+
+// Merge commit 判定
+const isMergeCommit = (
+  parents: { sha: string }[],
+): boolean => {
+  // 通常 commit は 1 つ、root commit は 0、Merge commit は 2 つ以上になる
+  if (parents.length >= 2) {
+    return true
+  }
+  return false
+};
