@@ -66,7 +66,9 @@ const fetchCommits = async (
     return
   }
 
-  await fetchCommitFiles(fullName, commits[0].sha)
+  for (const commit of commits) {
+    await fetchCommitFiles(fullName, commit.sha)
+  }
 };
 
 const fetchCommitFiles = async (
@@ -88,7 +90,7 @@ const fetchCommitFiles = async (
 
   const allowedExtensions = [`.kt`, `.kts`, `.java`, `.js`, `.jsx`, `.ts`, `.tsx`, `.py`, `.go`, `.rs`, `.rb`, `.php`, `.c`, `.h`, `.cpp`, `.hpp`, `.cs`, `.swift`, `.dart`, `.scala`, `.sh`, `.sql`]
   const includeCode = hasCodeChanges(commit.files, allowedExtensions)
-  console.log({ includeCode })
+  console.log({ sha: commit.sha, includeCode })
 };
 
 const hasCodeChanges = (
