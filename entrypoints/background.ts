@@ -1,4 +1,4 @@
-import { isMergeCommit } from "@/utils/commit-rules";
+import { isMergeCommit, hasCodeChanges } from "@/utils/commit-rules";
 
 export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id });
@@ -93,16 +93,3 @@ const fetchCommitFiles = async (
   console.log({ sha: commit.sha, includeCode })
 };
 
-const hasCodeChanges = (
-  files: { filename: string }[],
-  allowedExtensions: string[],
-): boolean => {
-  for (const file of files) {
-    for (const extension of allowedExtensions) {
-      if (file.filename.endsWith(extension)) {
-        return true
-      }
-    }
-  }
-  return false
-}

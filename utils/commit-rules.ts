@@ -10,3 +10,17 @@ export const isMergeCommit = (
   return false
 };
 
+// Write Code Every Day 判定に用いられるファイルがある
+export const hasCodeChanges = (
+  files: { filename: string }[],
+  allowedExtensions: string[],
+): boolean => {
+  for (const file of files) {
+    for (const extension of allowedExtensions) {
+      if (file.filename.endsWith(extension)) {
+        return true
+      }
+    }
+  }
+  return false
+}

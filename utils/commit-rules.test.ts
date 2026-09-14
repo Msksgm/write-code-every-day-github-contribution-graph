@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isMergeCommit } from './commit-rules';
+import { isMergeCommit, hasCodeChanges } from './commit-rules';
 
 describe('isMergeCommit', () => {
   it('親が0件の通常コミットはMergeではない', () => {
@@ -31,5 +31,55 @@ describe('isMergeCommit', () => {
     ];
 
     expect(isMergeCommit(parents)).toBe(true)
+  })
+})
+
+describe('hasCodeChanges', () => {
+  it('すべて許可リストに含まれているならtrue', () => {
+
+    const files = [{ filename: 'src/Main.kt' }]
+    const allowedExtensions = ['.kt', '.ts']
+
+    expect(hasCodeChanges(files, allowedExtensions)).toBe(true)
+  })
+
+  it('許可リストに1件でも含まれるならtrue', () => {
+
+    const files = [{ filename: 'README.md' }, { filename: 'src/Main.kt' }]
+    const allowedExtensions = ['.kt', '.ts']
+
+    expect(hasCodeChanges(files, allowedExtensions)).toBe(true)
+  })
+
+  it('許可リストに1件も含まれない', () => {
+
+    const files = [{ filename: 'README.md' }, { filename: 'config.yaml' }, { filename: 'package.json' }]
+    const allowedExtensions = ['.kt', '.ts']
+
+    expect(hasCodeChanges(files, allowedExtensions)).toBe(false)
+  })
+
+  it('filesが空ならfalse', () => {
+
+    const files: { filename: string }[] = []
+    const allowedExtensions = ['.kt', '.ts']
+
+    expect(hasCodeChanges(files, allowedExtensions)).toBe(false)
+  })
+
+  it('拡張子が異なれば、途中で含まれていてもfalse', () => {
+
+    const files = [{ filename: 'src/Main.kt.bak' }]
+    const allowedExtensions = ['.kt', '.ts']
+
+    expect(hasCodeChanges(files, allowedExtensions)).toBe(false)
+  })
+
+  it('allowListが空ならばfalse', () => {
+
+    const files = [{ filename: 'src/Main.kt' }]
+    const allowedExtensions: string[] = []
+
+    expect(hasCodeChanges(files, allowedExtensions)).toBe(false)
   })
 })
