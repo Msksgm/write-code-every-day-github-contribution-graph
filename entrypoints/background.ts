@@ -46,28 +46,35 @@ const fetchCommits = async (
   headSha: string,
   author: string,
 ): Promise<void> => {
-  const params = new URLSearchParams({
-    sha: headSha,
-    author,
-    per_page: '10',
-    page: '1',
-  })
-  const response = await fetch(`https://api.github.com/repos/${fullName}/commits?${params}`)
+  let page = 1
+  while (true) {
+    const params = new URLSearchParams({
+      sha: headSha,
+      author,
+      per_page: '10',
+      page: page.toString(),
+    })
+    const response = await fetch(`https://api.github.com/repos/${fullName}/commits?${params}`)
+    if (!response.ok) {
+      throw new Error(`取得に失敗しました : HTTP ${response.status}`)
+    }
 
-  if (!response.ok) {
-    throw new Error(`取得に失敗しました : HTTP ${response.status}`)
-  }
+    const commits = await response.json();
 
-  const commits = await response.json();
+    if (commits.length == 0) {
+      return
+    }
 
-  console.log({ commits })
-
-  if (commits.length == 0) {
-    return
-  }
-
-  for (const commit of commits) {
-    await fetchCommitFiles(fullName, commit.sha)
+    for (const commit of commits) {
+      await fetchCommitFiles(fullName, commit.sha)
+    }
+    const link = response.headers.get('link');
+    const hasNextPage = link?.includes('rel="next"') ?? false;
+    console.log({ page, count: commits.length })
+    if (!hasNextPage) {
+      break
+    }
+    page += 1
   }
 };
 
