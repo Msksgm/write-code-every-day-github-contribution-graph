@@ -1,4 +1,4 @@
-import { isMergeCommit, hasCodeChanges } from "@/utils/commit-rules";
+import { fetchCommitFiles } from "@/utils/commit-files";
 
 export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id });
@@ -76,27 +76,5 @@ const fetchCommits = async (
     }
     page += 1
   }
-};
-
-const fetchCommitFiles = async (
-  fullName: string,
-  sha: string,
-): Promise<void> => {
-  const response = await fetch(`https://api.github.com/repos/${fullName}/commits/${sha}`)
-
-  if (!response.ok) {
-    throw new Error(`取得に失敗しました : HTTP ${response.status}`)
-  }
-
-  const commit = await response.json();
-
-  if (isMergeCommit(commit.parents)) {
-    console.log('merge commit を除外:', commit.sha);
-    return
-  }
-
-  const allowedExtensions = [`.kt`, `.kts`, `.java`, `.js`, `.jsx`, `.ts`, `.tsx`, `.py`, `.go`, `.rs`, `.rb`, `.php`, `.c`, `.h`, `.cpp`, `.hpp`, `.cs`, `.swift`, `.dart`, `.scala`, `.sh`, `.sql`]
-  const includeCode = hasCodeChanges(commit.files, allowedExtensions)
-  console.log({ sha: commit.sha, includeCode })
 };
 
