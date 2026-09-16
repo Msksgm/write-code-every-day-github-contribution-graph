@@ -24,14 +24,12 @@ it('1ページ目にコードがあれば次ページを取得しない', async 
   const fetchMock = vi.fn().mockResolvedValueOnce(response);
   vi.stubGlobal('fetch', fetchMock)
 
-  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-
-  await fetchCommitFiles('owner/repo', 'commit-a');
+  const result = await fetchCommitFiles('owner/repo', 'commit-a');
 
   expect(fetchMock).toHaveBeenCalledTimes(1)
-  expect(logSpy).toHaveBeenCalledWith({
+  expect(result).toEqual({
     sha: 'commit-a',
-    includeCode: true,
+    status: 'included'
   })
 })
 
@@ -66,22 +64,20 @@ it('2ページ目にだけコードがあるとき、2ページまで確認し�
   const fetchMock = vi.fn().mockResolvedValueOnce(response1).mockResolvedValueOnce(response2);
   vi.stubGlobal('fetch', fetchMock)
 
-  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-
-  await fetchCommitFiles('owner/repo', 'commit-a');
+  const result = await fetchCommitFiles('owner/repo', 'commit-a');
 
   expect(fetchMock).toHaveBeenCalledTimes(2)
   expect(fetchMock).toHaveBeenNthCalledWith(
     2,
     'https://api.github.com/repos/owner/repo/commits/commit-a?per_page=10&page=2',
   )
-  expect(logSpy).toHaveBeenCalledWith({
+  expect(result).toEqual({
     sha: 'commit-a',
-    includeCode: true,
+    status: 'included'
   })
 })
 
-it('全ページが文章だけならfalseを返す', async () => {
+it('「全ページが文書だけならexcludedを返す', async () => {
   const response1 = new Response(
     JSON.stringify({
       sha: 'commit-a',
@@ -112,22 +108,20 @@ it('全ページが文章だけならfalseを返す', async () => {
   const fetchMock = vi.fn().mockResolvedValueOnce(response1).mockResolvedValueOnce(response2);
   vi.stubGlobal('fetch', fetchMock)
 
-  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-
-  await fetchCommitFiles('owner/repo', 'commit-a');
+  const result = await fetchCommitFiles('owner/repo', 'commit-a');
 
   expect(fetchMock).toHaveBeenCalledTimes(2)
   expect(fetchMock).toHaveBeenNthCalledWith(
     2,
     'https://api.github.com/repos/owner/repo/commits/commit-a?per_page=10&page=2',
   )
-  expect(logSpy).toHaveBeenCalledWith({
+  expect(result).toEqual({
     sha: 'commit-a',
-    includeCode: false,
+    status: 'excluded'
   })
 })
 
-it('コードがなく累計3,000ファイルに到達したら「未確認」で終了する', async () => {
+it('コードがなく累計3,000ファイルに到達したら「unknown」を返す', async () => {
   const fetchMock = vi.fn();
   for (let page = 1; page <= 300; page++) {
     const files = Array.from({ length: 10 }, (_, index) => ({
@@ -153,21 +147,15 @@ it('コードがなく累計3,000ファイルに到達したら「未確認」�
 
   vi.stubGlobal('fetch', fetchMock)
 
-  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
-
-  await fetchCommitFiles('owner/repo', 'commit-a');
+  const result = await fetchCommitFiles('owner/repo', 'commit-a');
 
   expect(fetchMock).toHaveBeenCalledTimes(300)
   expect(fetchMock).toHaveBeenNthCalledWith(
     300,
     'https://api.github.com/repos/owner/repo/commits/commit-a?per_page=10&page=300',
   )
-  expect(logSpy).toHaveBeenCalledWith({
+  expect(result).toEqual({
     sha: 'commit-a',
-    status: '未確認',
+    status: 'unknown'
   })
-  expect(logSpy).not.toHaveBeenCalledWith({
-    sha: 'commit-a',
-    includeCode: false,
-  });
 })

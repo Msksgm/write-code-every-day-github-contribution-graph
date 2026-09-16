@@ -66,7 +66,8 @@ const fetchCommits = async (
     }
 
     for (const commit of commits) {
-      await fetchCommitFiles(fullName, commit.sha)
+      const result = await fetchCommitFiles(fullName, commit.sha)
+      console.log(result);
     }
     const link = response.headers.get('link');
     const hasNextPage = link?.includes('rel="next"') ?? false;

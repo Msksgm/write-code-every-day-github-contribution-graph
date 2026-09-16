@@ -3,7 +3,7 @@ import { isMergeCommit, hasCodeChanges } from './commit-rules';
 export const fetchCommitFiles = async (
   fullName: string,
   sha: string,
-): Promise<void> => {
+): Promise<CommitCheckResult> => {
   const allowedExtensions = [`.kt`, `.kts`, `.java`, `.js`, `.jsx`, `.ts`, `.tsx`, `.py`, `.go`, `.rs`, `.rb`, `.php`, `.c`, `.h`, `.cpp`, `.hpp`, `.cs`, `.swift`, `.dart`, `.scala`, `.sh`, `.sql`];
   let page = 1;
   let fetchFileCount = 0;
@@ -23,27 +23,29 @@ export const fetchCommitFiles = async (
 
     if (isMergeCommit(commit.parents)) {
       console.log('merge commit を除外:', commit.sha);
-      return
+      return { sha: commit.sha, status: 'excluded' };
     }
 
     const includeCode = hasCodeChanges(commit.files, allowedExtensions)
     if (includeCode) {
-      console.log({ sha: commit.sha, includeCode })
-      return
+      return { sha: commit.sha, status: 'included' };
     }
 
     if (fetchFileCount >= 3000) {
-      console.log({ sha: commit.sha, status: '未確認' });
-      return;
+      return { sha: commit.sha, status: 'unknown' };
     }
 
     const link = response.headers.get('link');
     const hasNextPage = link?.includes('rel="next"') ?? false;
     if (!hasNextPage) {
-      console.log({ sha: commit.sha, includeCode })
-      break
+      return { sha: commit.sha, status: 'excluded' }
     }
     page += 1
   }
 };
 
+
+export type CommitCheckResult = {
+  sha: string;
+  status: 'included' | 'excluded' | 'unknown';
+};
