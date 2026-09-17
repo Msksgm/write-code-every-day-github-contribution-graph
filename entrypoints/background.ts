@@ -1,4 +1,4 @@
-import { fetchCommitFiles } from "@/utils/commit-files";
+import { fetchCommitFiles, type CommitCheckResult } from "@/utils/commit-files";
 
 export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id });
@@ -22,7 +22,8 @@ const fetchRepository = async (): Promise<void> => {
   );
 
 
-  await fetchCommits(repository.full_name, headSha, 'Msksgm');
+  const results = await fetchCommits(repository.full_name, headSha, 'Msksgm');
+  console.table(results)
 };
 
 const fetchHeadSha = async (
@@ -45,8 +46,9 @@ const fetchCommits = async (
   fullName: string,
   headSha: string,
   author: string,
-): Promise<void> => {
+): Promise<CommitCheckResult[]> => {
   let page = 1
+  const results: CommitCheckResult[] = [];
   while (true) {
     const params = new URLSearchParams({
       sha: headSha,
@@ -62,12 +64,12 @@ const fetchCommits = async (
     const commits = await response.json();
 
     if (commits.length == 0) {
-      return
+      return results
     }
 
     for (const commit of commits) {
       const result = await fetchCommitFiles(fullName, commit.sha)
-      console.log(result);
+      results.push(result)
     }
     const link = response.headers.get('link');
     const hasNextPage = link?.includes('rel="next"') ?? false;
@@ -77,5 +79,6 @@ const fetchCommits = async (
     }
     page += 1
   }
+  return results
 };
 
