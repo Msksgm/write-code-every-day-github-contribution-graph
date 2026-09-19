@@ -24,3 +24,18 @@ export const hasCodeChanges = (
   }
   return false
 }
+
+export const isTargetAuthor = (
+  author: { login: string } | null,
+  targetUser: string,
+): boolean => {
+  if (author === null) {
+    return false
+  }
+
+  if (author.login.toLowerCase() !== targetUser.toLowerCase()) {
+    return false
+  }
+
+  return true
+}

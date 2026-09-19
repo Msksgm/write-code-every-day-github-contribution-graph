@@ -1,4 +1,5 @@
 import { fetchCommitFiles, type CommitCheckResult } from "@/utils/commit-files";
+import { isTargetAuthor } from "@/utils/commit-rules";
 
 export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id });
@@ -68,6 +69,10 @@ const fetchCommits = async (
     }
 
     for (const commit of commits) {
+      if (!isTargetAuthor(commit.author, author)) {
+        results.push({ sha: commit.sha, status: 'excluded' })
+        continue
+      }
       const result = await fetchCommitFiles(fullName, commit.sha)
       results.push(result)
     }
