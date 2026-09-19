@@ -1,4 +1,5 @@
 import { fetchCommitFiles, type CommitCheckResult } from "@/utils/commit-files";
+import { fetchCommitPatch } from "@/utils/commit-patch";
 import { isTargetAuthor } from "@/utils/commit-rules";
 
 export default defineBackground(() => {
@@ -22,6 +23,8 @@ const fetchRepository = async (): Promise<void> => {
     repository.default_branch,
   );
 
+  const patch = await fetchCommitPatch(repository.full_name, headSha);
+  console.log(patch);
 
   const results = await fetchCommits(repository.full_name, headSha, 'Msksgm');
   console.table(results)
