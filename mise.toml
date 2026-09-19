@@ -1,0 +1,23 @@
+[tools]
+node = "26.3.1"
+pnpm = "12.3.4"
+
+[tasks.dev]
+description = "devブラウザを開いて拡張機能をデバッグ"
+run = "pnpm dev"
+
+[tasks.vitest]
+description = "vitestを常駐"
+run = "pnpm exec vitest"
+
+[tasks."vitest:run"]
+description = "vitestを一回だけ実行"
+run = "pnpm exec vitest run"
+
+[tasks.typecheck]
+description = "コンパイル"
+run = "pnpm compile"
+
+[tasks.build]
+description = "ビルド"
+run = "pnpm build"
