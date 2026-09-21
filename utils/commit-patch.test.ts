@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseCommitPatchHeader } from './commit-patch';
+import { parseCommitPatchHeader, matchesCommitPatchHeader } from './commit-patch';
 
 describe('parseCommitPatchHeader', () => {
   it('先頭のSHAとDateヘッダーを抽出する', () => {
@@ -92,3 +92,59 @@ describe('parseCommitPatchHeader', () => {
   })
 })
 
+describe('matchesCommitPatchHeader', () => {
+  it('SHA が一致し、+0900 と UTC が同じ瞬間', () => {
+    const sha = 'a'.repeat(40);
+    const authorDate = 'Sat, 19 Sep 2026 09:05:46 +0900';
+    const header = { sha: sha, authorDate: authorDate };
+    const expectedSha = sha;
+    const apiAuthorDate = '2026-09-19T00:05:46Z';
+
+    const isMatch = matchesCommitPatchHeader(header, expectedSha, apiAuthorDate);
+    expect(isMatch).toBe(true)
+  })
+
+  it('SHA が一致し、-0700 と UTC が同じ瞬間', () => {
+    const sha = 'a'.repeat(40);
+    const authorDate = 'Sat, 19 Sep 2026 09:05:46 -0700';
+    const header = { sha: sha, authorDate: authorDate };
+    const expectedSha = sha;
+    const apiAuthorDate = '2026-09-19T16:05:46Z';
+
+    const isMatch = matchesCommitPatchHeader(header, expectedSha, apiAuthorDate);
+    expect(isMatch).toBe(true)
+  })
+
+  it('SHA が異なる', () => {
+    const sha = 'a'.repeat(40);
+    const authorDate = 'Sat, 19 Sep 2026 09:05:46 +0900';
+    const header = { sha: sha, authorDate: authorDate };
+    const expectedSha = 'b'.repeat(40);
+    const apiAuthorDate = '2026-09-19T00:05:46Z';
+
+    const isMatch = matchesCommitPatchHeader(header, expectedSha, apiAuthorDate);
+    expect(isMatch).toBe(false);
+  })
+
+  it('日時が1秒異なる', () => {
+    const sha = 'a'.repeat(40);
+    const authorDate = 'Sat, 19 Sep 2026 09:05:46 +0900';
+    const header = { sha: sha, authorDate: authorDate };
+    const expectedSha = sha;
+    const apiAuthorDate = '2026-09-19T00:05:45Z';
+
+    const isMatch = matchesCommitPatchHeader(header, expectedSha, apiAuthorDate);
+    expect(isMatch).toBe(false)
+  })
+
+  it('日時が解析できない文字列', () => {
+    const sha = 'a'.repeat(40);
+    const authorDate = 'Sat, 19 Sep 2026 09:05:46 +0900';
+    const header = { sha: sha, authorDate: authorDate };
+    const expectedSha = sha;
+    const apiAuthorDate = 'not-a-date';
+
+    const isMatch = matchesCommitPatchHeader(header, expectedSha, apiAuthorDate);
+    expect(isMatch).toBe(false);
+  })
+})

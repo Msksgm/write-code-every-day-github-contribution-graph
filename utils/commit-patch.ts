@@ -52,3 +52,27 @@ export const parseCommitPatchHeader = (
   return null
 };
 
+
+// SHA と日時が両方一致するかを返す
+export const matchesCommitPatchHeader = (
+  header: CommitPatchHeader,
+  expectedSha: string,
+  apiAuthorDate: string,
+): boolean => {
+  if (header.sha.toLowerCase() !== expectedSha.toLowerCase()) {
+    return false;
+  }
+
+  const patchTime = Date.parse(header.authorDate);
+  const apiTime = Date.parse(apiAuthorDate);
+
+  if (Number.isNaN(patchTime) || Number.isNaN(apiTime)) {
+    return false;
+  }
+
+  if (patchTime !== apiTime) {
+    return false;
+  }
+
+  return true;
+}
