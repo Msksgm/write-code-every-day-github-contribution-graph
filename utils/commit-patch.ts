@@ -76,3 +76,53 @@ export const matchesCommitPatchHeader = (
 
   return true;
 }
+
+export const extractCommitAuthorDate = (
+  authorDate: string,
+): string | null => {
+  if (Number.isNaN(Date.parse(authorDate))) {
+    return null
+  }
+  // 年月日を取り出す。形式が不正なら null
+  const match = authorDate.match(
+    /^[A-Za-z]{3},\s+(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})\s/,
+  )
+
+  if (match === null) {
+    return null;
+  }
+
+  const months = new Map<string, string>([
+    ['Jan', '01'],
+    ['Feb', '02'],
+    ['Mar', '03'],
+    ['Apr', '04'],
+    ['May', '05'],
+    ['Jun', '06'],
+    ['Jul', '07'],
+    ['Aug', '08'],
+    ['Sep', '09'],
+    ['Oct', '10'],
+    ['Nov', '11'],
+    ['Dec', '12'],
+  ]);
+  if (match[2] == undefined) {
+    return null;
+  }
+  const month = months.get(match[2]);
+  if (month === undefined) {
+    return null;
+  }
+
+  const year = match[3];
+  if (year === undefined) {
+    return null;
+  }
+
+  if (match[1] === undefined) {
+    return null;
+  }
+  const day = match[1].padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};

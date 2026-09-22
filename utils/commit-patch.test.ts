@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseCommitPatchHeader, matchesCommitPatchHeader } from './commit-patch';
+import { parseCommitPatchHeader, matchesCommitPatchHeader, extractCommitAuthorDate } from './commit-patch';
 
 describe('parseCommitPatchHeader', () => {
   it('先頭のSHAとDateヘッダーを抽出する', () => {
@@ -147,4 +147,49 @@ describe('matchesCommitPatchHeader', () => {
     const isMatch = matchesCommitPatchHeader(header, expectedSha, apiAuthorDate);
     expect(isMatch).toBe(false);
   })
+})
+
+describe('extractCommitAuthorDate', () => {
+  it('正のオフセットでUTCでは前日になる場合も元の日付を返す', () => {
+    const authorDate = 'Sat, 19 Sep 2026 00:30:00 +0900';
+    const extractedCommitAuthorDate = extractCommitAuthorDate(authorDate)
+
+    expect(extractedCommitAuthorDate).toBe('2026-09-19');
+  })
+
+  it('負のオフセットでUTCでは翌日になる場合も元の日付を返す', () => {
+    const authorDate = 'Sat, 19 Sep 2026 23:30:00 -0700';
+    const extractedCommitAuthorDate = extractCommitAuthorDate(authorDate)
+
+    expect(extractedCommitAuthorDate).toBe('2026-09-19');
+  })
+
+  it('1桁の日をゼロ埋めしてYYYY-MM-DD形式で返す', () => {
+    const authorDate = 'Tue, 1 Sep 2026 09:00:00 +0900';
+    const extractedCommitAuthorDate = extractCommitAuthorDate(authorDate)
+
+    expect(extractedCommitAuthorDate).toBe('2026-09-01');
+  })
+
+  it('解析できない日時の場合はnullを返す', () => {
+    const authorDate = 'not-a-date';
+    const extractedCommitAuthorDate = extractCommitAuthorDate(authorDate)
+
+    expect(extractedCommitAuthorDate).toBeNull();
+  })
+
+  it('空文字の場合はnullを返す', () => {
+    const authorDate = '';
+    const extractedCommitAuthorDate = extractCommitAuthorDate(authorDate)
+
+    expect(extractedCommitAuthorDate).toBeNull();
+  })
+
+  it('年月日があっても時刻部分が不正ならnullを返す', () => {
+    const authorDate = 'Sat, 19 Sep 2026 invalid';
+    const extractedCommitAuthorDate = extractCommitAuthorDate(authorDate)
+
+    expect(extractedCommitAuthorDate).toBeNull();
+  })
+
 })
