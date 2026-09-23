@@ -126,3 +126,22 @@ export const extractCommitAuthorDate = (
 
   return `${year}-${month}-${day}`;
 };
+
+export const resolveCommitDate = (
+  patch: string,
+  expectedSha: string,
+  apiAuthorDate: string,
+): string | null => {
+
+  const commitPatchHeader = parseCommitPatchHeader(patch);
+
+  if (commitPatchHeader === null) {
+    return null;
+  }
+
+  if (!matchesCommitPatchHeader(commitPatchHeader, expectedSha, apiAuthorDate)) {
+    return null;
+  }
+
+  return extractCommitAuthorDate(commitPatchHeader.authorDate);
+}

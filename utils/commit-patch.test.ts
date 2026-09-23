@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseCommitPatchHeader, matchesCommitPatchHeader, extractCommitAuthorDate } from './commit-patch';
+import { parseCommitPatchHeader, matchesCommitPatchHeader, extractCommitAuthorDate, resolveCommitDate } from './commit-patch';
 
 describe('parseCommitPatchHeader', () => {
   it('先頭のSHAとDateヘッダーを抽出する', () => {
@@ -192,4 +192,27 @@ describe('extractCommitAuthorDate', () => {
     expect(extractedCommitAuthorDate).toBeNull();
   })
 
+})
+
+describe('resolveCommitDate', () => {
+  it('一致する patch のとき、日付を探す', () => {
+    const sha = 'a'.repeat(40);
+    const authorDate = 'Sat, 19 Sep 2026 09:05:46 +0900';
+    const patch = `From ${sha} Mon Sep 17 00:00:00 2001\nDate: ${authorDate}\n\n本文`;
+
+    const actual = resolveCommitDate(patch, sha, authorDate);
+
+    expect(actual).toEqual('2026-09-19');
+  })
+
+  it('日付は抽出できるが SHA が不一致の patch → null', () => {
+    const sha = 'a'.repeat(40);
+    const authorDate = 'Sat, 19 Sep 2026 09:05:46 +0900';
+    const invalidSha = 'b'.repeat(40);
+    const patch = `From ${sha} Mon Sep 17 00:00:00 2001\nDate: ${authorDate}\n\n本文`;
+
+    const actual = resolveCommitDate(patch, invalidSha, authorDate);
+
+    expect(actual).toBeNull();
+  })
 })
