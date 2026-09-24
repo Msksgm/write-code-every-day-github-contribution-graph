@@ -1,8 +1,10 @@
+import { githubFetch } from "./github-fetch";
+
 export const fetchCommitPatch = async (
   fullName: string,
   sha: string,
 ): Promise<string> => {
-  const response = await fetch(`https://api.github.com/repos/${fullName}/commits/${sha}`,
+  const response = await githubFetch(`/repos/${fullName}/commits/${sha}`,
     {
       headers: {
         Accept: 'application/vnd.github.patch',

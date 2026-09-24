@@ -1,6 +1,7 @@
-import { fetchCommitFiles, type CommitCheckResult } from "@/utils/commit-files";
-import { fetchCommitPatch } from "@/utils/commit-patch";
+import { fetchCommitFiles } from "@/utils/commit-files";
+import { fetchCommitPatch, resolveCommitDate } from "@/utils/commit-patch";
 import { isTargetAuthor } from "@/utils/commit-rules";
+import { githubFetch } from "@/utils/github-fetch";
 
 export default defineBackground(() => {
   console.log('Hello background!', { id: browser.runtime.id });
@@ -10,7 +11,7 @@ export default defineBackground(() => {
 });
 
 const fetchRepository = async (): Promise<void> => {
-  const response = await fetch('https://api.github.com/repos/Msksgm/write-code-every-day-github-contribution-graph');
+  const response = await githubFetch('/repos/Msksgm/write-code-every-day-github-contribution-graph');
 
   if (!response.ok) {
     throw new Error(`取得に失敗しました : HTTP ${response.status}`);
@@ -34,7 +35,7 @@ const fetchHeadSha = async (
   fullName: string,
   branch: string,
 ): Promise<string> => {
-  const response = await fetch(`https://api.github.com/repos/${fullName}/commits/${encodeURIComponent(branch)}`)
+  const response = await githubFetch(`/repos/${fullName}/commits/${encodeURIComponent(branch)}`)
 
   if (!response.ok) {
     throw new Error(`取得に失敗しました : HTTP ${response.status}`)
@@ -46,21 +47,24 @@ const fetchHeadSha = async (
   return commit.sha
 };
 
+type DatedCommitResult =
+  | { sha: string; status: 'included'; date: string }
+  | { sha: string, status: 'excluded' | 'unknown' }
+
 const fetchCommits = async (
   fullName: string,
   headSha: string,
   author: string,
-): Promise<CommitCheckResult[]> => {
+): Promise<DatedCommitResult[]> => {
   let page = 1
-  const results: CommitCheckResult[] = [];
+  const results: DatedCommitResult[] = [];
   while (true) {
     const params = new URLSearchParams({
       sha: headSha,
-      author,
-      per_page: '10',
+      author, per_page: '10',
       page: page.toString(),
     })
-    const response = await fetch(`https://api.github.com/repos/${fullName}/commits?${params}`)
+    const response = await githubFetch(`/repos/${fullName}/commits?${params}`)
     if (!response.ok) {
       throw new Error(`取得に失敗しました : HTTP ${response.status}`)
     }
@@ -77,7 +81,21 @@ const fetchCommits = async (
         continue
       }
       const result = await fetchCommitFiles(fullName, commit.sha)
-      results.push(result)
+      if (result.status !== 'included') {
+        results.push({ sha: result.sha, status: result.status })
+      } else {
+        try {
+          const patch = await fetchCommitPatch(fullName, result.sha)
+          const commitDate = resolveCommitDate(patch, commit.sha, commit.commit.author.date);
+          if (commitDate === null) {
+            results.push({ sha: result.sha, status: 'unknown' })
+          } else {
+            results.push({ sha: result.sha, status: 'included', date: commitDate })
+          }
+        } catch {
+          results.push({ sha: result.sha, status: 'unknown' })
+        }
+      }
     }
     const link = response.headers.get('link');
     const hasNextPage = link?.includes('rel="next"') ?? false;

@@ -70,6 +70,9 @@ it('2ページ目にだけコードがあるとき、2ページまで確認し�
   expect(fetchMock).toHaveBeenNthCalledWith(
     2,
     'https://api.github.com/repos/owner/repo/commits/commit-a?per_page=10&page=2',
+    expect.objectContaining({
+      headers: expect.any(Headers),
+    }),
   )
   expect(result).toEqual({
     sha: 'commit-a',
@@ -114,6 +117,9 @@ it('「全ページが文書だけならexcludedを返す', async () => {
   expect(fetchMock).toHaveBeenNthCalledWith(
     2,
     'https://api.github.com/repos/owner/repo/commits/commit-a?per_page=10&page=2',
+    expect.objectContaining({
+      headers: expect.any(Headers),
+    }),
   )
   expect(result).toEqual({
     sha: 'commit-a',
@@ -153,6 +159,9 @@ it('コードがなく累計3,000ファイルに到達したら「unknown」を�
   expect(fetchMock).toHaveBeenNthCalledWith(
     300,
     'https://api.github.com/repos/owner/repo/commits/commit-a?per_page=10&page=300',
+    expect.objectContaining({
+      headers: expect.any(Headers),
+    }),
   )
   expect(result).toEqual({
     sha: 'commit-a',

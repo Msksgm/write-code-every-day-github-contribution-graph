@@ -1,4 +1,5 @@
 import { isMergeCommit, hasCodeChanges } from './commit-rules';
+import { githubFetch } from "./github-fetch";
 
 export const fetchCommitFiles = async (
   fullName: string,
@@ -12,7 +13,7 @@ export const fetchCommitFiles = async (
       per_page: '10',
       page: page.toString(),
     })
-    const response = await fetch(`https://api.github.com/repos/${fullName}/commits/${sha}?${params}`)
+    const response = await githubFetch(`/repos/${fullName}/commits/${sha}?${params}`);
 
     if (!response.ok) {
       throw new Error(`取得に失敗しました : HTTP ${response.status}`)
