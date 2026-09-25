@@ -24,9 +24,6 @@ const fetchRepository = async (): Promise<void> => {
     repository.default_branch,
   );
 
-  const patch = await fetchCommitPatch(repository.full_name, headSha);
-  console.log(patch);
-
   const results = await fetchCommits(repository.full_name, headSha, 'Msksgm');
   console.table(results)
 };
@@ -80,11 +77,11 @@ const fetchCommits = async (
         results.push({ sha: commit.sha, status: 'excluded' })
         continue
       }
-      const result = await fetchCommitFiles(fullName, commit.sha)
-      if (result.status !== 'included') {
-        results.push({ sha: result.sha, status: result.status })
-      } else {
-        try {
+      try {
+        const result = await fetchCommitFiles(fullName, commit.sha)
+        if (result.status !== 'included') {
+          results.push({ sha: result.sha, status: result.status })
+        } else {
           const patch = await fetchCommitPatch(fullName, result.sha)
           const commitDate = resolveCommitDate(patch, commit.sha, commit.commit.author.date);
           if (commitDate === null) {
@@ -92,9 +89,9 @@ const fetchCommits = async (
           } else {
             results.push({ sha: result.sha, status: 'included', date: commitDate })
           }
-        } catch {
-          results.push({ sha: result.sha, status: 'unknown' })
         }
+      } catch {
+        results.push({ sha: commit.sha, status: 'unknown' })
       }
     }
     const link = response.headers.get('link');
